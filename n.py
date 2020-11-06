@@ -5,6 +5,7 @@ ARRIVAL, DEPART, EXIT = 1, 2, 3
 cumulative_probabilites = []
 rout = []
 service_time_set = []
+total_job_type = 0
 def return_row(file):
     f = open(file,'r')
     usable = csv.reader(f)
@@ -29,6 +30,7 @@ class Event:
         self.event_type = event_type #arrival or depart
     def process(self, shop):
         if self.event_type == ARRIVAL:
+            #print("this is arrival")
             #first schedule new arrival if it is new incomming job to shop
             if self.job.current_rout_index == -1:
                 next_arrival_time = shop.clock + np.random.exponential(shop.job_inter_arrival_time,1)[0]
@@ -38,13 +40,46 @@ class Event:
                 shop.schedule_event(next_arrival_time,event)
             #next complete the current arrival tasks
             self.job.current_rout_index+=1 #go to next station
-            station_index = self.job.rout[self.job.current_rout_index]
+            station_index = self.job.rout[self.job.current_rout_index]-1 #for zero indexing
             if shop.station_set[station_index].total_idle_machine ==0:
                 #should insert a tuple of inserting time,event in the queue
-                shop.station_set[station_index].queue.push((shop.clock,self.job))
+                shop.station_set[station_index].area_qt+=(len(shop.station_set[station_index].queue)*(shop.clock-shop.station_set[station_index].last_event_time))
+                shop.station_set[station_index].queue.append((shop.clock,self.job))
+                shop.station_set[station_index].last_event_time = shop.clock
+            else:
+                shop.station_set[station_index].total_idle_machine-=1
+                service_mean = self.job.service_time_set[self.job.current_rout_index]
+                service_time = np.random.exponential(service_mean/2.0,2).sum()
+                depart_at = shop.clock + service_time
+                shop.schedule_event(depart_at,Event(self.job,DEPART))
             pass
         if self.event_type == DEPART:
-            print("this is depart")
+            #print("this is depart")
+            #first we decide what to do whith this departed job
+            station_index = self.job.rout[self.job.current_rout_index]-1
+            shop.station_set[station_index].served+=1
+            if self.job.current_rout_index+1 >= len(self.job.rout):
+                #this means completeness of a job
+                shop.total_done_jobs+=1
+                self.job.job_total_delay+=(shop.clock-self.job.appeared_at)
+                shop.done_job_set.append(self.job)
+            else:
+                #pass
+                shop.schedule_event(shop.clock,Event(self.job,ARRIVAL))
+            if len(shop.station_set[station_index].queue) > 0:
+                q_len = len(shop.station_set[station_index].queue)
+                time, job = shop.station_set[station_index].queue.pop(0)
+                shop.station_set[station_index].last_event_time = shop.clock
+                job.job_delay_in_queue+=shop.clock-time
+                service_mean = self.job.service_time_set[self.job.current_rout_index]
+                service_time = np.random.exponential(service_mean/2.0,2).sum()
+                shop.schedule_event(shop.clock+service_time,Event(job,DEPART))
+                q_delay = shop.clock-time
+                self.job.job_delay_in_queue+=q_delay
+                shop.station_set[station_index].total_queue_delay+=q_delay
+                shop.station_set[station_index].area_qt+=(q_len*q_delay)
+            else:
+                shop.station_set[station_index].total_idle_machine+=1
 class Job:
     def __init__(self, type,rt,service_time_set,appeared_at):
         self.type = type
@@ -56,7 +91,7 @@ class Job:
             self.rout.append(i)
         self.current_rout_index = -1 #currently outside of the rout (station)
         self.job_delay_in_queue = 0
-        self.jod_total_delay = 0
+        self.job_total_delay = 0
         self.appeared_at = appeared_at
 
 class Station:
@@ -67,6 +102,7 @@ class Station:
         self.total_queue_delay = 0
         self.served = 0
         self.area_qt = 0
+        self.last_event_time = 0
     def print_station(self):
         print("queue = ",self.queue)
         print("total machine = ",self.total_machine)
@@ -86,6 +122,8 @@ class Shop():
         self.station_set = []
         for i in number_of_machine_set:
             self.station_set.append(Station(i))
+        self.done_job_set = []
+        self.total_sim_time = 0
     def print_station_set(self):
         for i in range(self.total_station):
             print("station no ",i+1)
@@ -94,6 +132,7 @@ class Shop():
         heapq.heappush(self.evnetq,(time,event))
         pass
     def run(self, total_sim_time):
+        self.total_sim_time = total_sim_time
         #first schedule when this shop will close
         self.schedule_event(total_sim_time,Event(None,EXIT))
         #then schedule the first arrival event that will make arrival recurrently
@@ -104,39 +143,82 @@ class Shop():
         self.schedule_event(first_arrival_time,event)
         while len(self.evnetq) > 0:
             time, event = heapq.heappop(self.evnetq)
-            print("time = ",time)
+            #print("time = ",time)
             if event.event_type == EXIT:
+                for i in range(len(self.station_set)):
+                    #print(i.last_event_time)
+                    #self.station_set[i].area_qt+=(self.total_sim_time-self.station_set[i].last_event_time)*len(self.station_set[i].queue)
+                    pass
                 break
             self.clock = time #clock time is the time of current event
             event.process(self)
         pass
+    def finish(self):
+        pass
+    def print_result(self):
+        for i in self.done_job_set:
+            print("queue delay = ",i.job_delay_in_queue)
+            print("total delay = ",i.job_total_delay)
+        for i in self.station_set:
+            print(i.total_queue_delay/i.served)
+        pass
+    def get_job_queue_delay(self,total_job_type):
+        freq  = []
+        sum_time = []
+        for i in range(total_job_type):
+            freq.append(0)
+            sum_time.append(0.0)
+        for i in self.done_job_set:
+            freq[i.type-1]+=1
+            sum_time[i.type-1]+=i.job_delay_in_queue
+        return freq,sum_time
+    def get_job_total_delay(self,total_job_type):
+        freq  = []
+        sum_time = []
+        for i in range(total_job_type):
+            freq.append(0)
+            sum_time.append(0.0)
+        for i in self.done_job_set:
+            freq[i.type-1]+=1
+            sum_time[i.type-1]+=i.job_total_delay
+        return freq,sum_time
+    def get_station_average_q_len(self):
+        queue_len = []
+        for i in self.station_set:
+            queue_len.append(i.area_qt/self.total_sim_time)
+        return queue_len
+    def get_station_average_q_delay(self):
+        queue_delay = []
+        for i in self.station_set:
+            queue_delay.append(i.total_queue_delay)
+        return queue_delay
 def main():
     data = return_row("input.txt")
     total_station = int(data[0][0])
     number_of_machine_set = []
     for i in data[1]:
         number_of_machine_set.append(int(i))
-    print(total_station)
-    print(number_of_machine_set)
+    #print(total_station)
+    #print(number_of_machine_set)
     job_inter_arrival_time = data[2][0]
-    print(job_inter_arrival_time)
+    #print(job_inter_arrival_time)
     total_job_type = int(data[3][0])
-    print(total_job_type)
+    #print(total_job_type)
     job_probabilities = data[4]
-    print(job_probabilities)
+    #print(job_probabilities)
     number_of_station_of_job = []
     for i in data[5]:
         number_of_station_of_job.append(int(i))
-    print(number_of_station_of_job)
+    #print(number_of_station_of_job)
     for i in range(total_job_type):
         t_rout = [] #data contains double value only, to make them int we create temporary t_rout
         for j in data[6+2*i]:
             t_rout.append(int(j))
         rout.append(t_rout)
         service_time_set.append(data[6+2*i+1])
-    print(rout)
-    print("now see the times")
-    print(service_time_set)
+    #print(rout)
+    #print("now see the times")
+    #print(service_time_set)
     cumulative_probabilites.append(job_probabilities[0])
     for i in range(1,len(job_probabilities)):
         cumulative_probabilites.append(cumulative_probabilites[-1]+job_probabilities[i])
@@ -144,5 +226,59 @@ def main():
     shop = Shop(total_station,number_of_machine_set,job_inter_arrival_time)
     #shop.print_station_set()
     shop.run(8)
+    #shop.print_result()
+    #print(shop.total_done_jobs)
+    #print(shop.get_job_queue_delay(total_job_type))
+    #print(shop.get_job_total_delay(total_job_type))
+    #print(shop.get_station_average_q_len())
+    #print(shop.get_station_average_q_delay())
+    job_queue_delay = []
+    job_freq = []
+    job_total_delay = []
+    q_len = []
+    total_q_delay_at_station = []
+    for i in range(total_station):
+        q_len.append(0.0)
+        total_q_delay_at_station.append(0)
+    for i in range(total_job_type):
+        job_queue_delay.append(0.0)
+        job_freq.append(0)
+        job_total_delay.append(0.0)
+    total_done_job = 0
+    
+    for _ in range(30):
+        shop = Shop(total_station,number_of_machine_set,job_inter_arrival_time)
+        shop.run(8)
+        freq,q_delay = shop.get_job_queue_delay(total_job_type)
+        job_queue_delay = np.add(job_queue_delay,q_delay)
+        job_freq = np.add(job_freq,freq)
+        freq,t_delay = shop.get_job_total_delay(total_job_type)
+        job_total_delay = np.add(job_total_delay,t_delay)
+
+        q_len = np.add(q_len,shop.get_station_average_q_len())
+        total_done_job+=shop.total_done_jobs
+        total_q_delay_at_station = np.add(total_q_delay_at_station,shop.get_station_average_q_delay())
+    print("Queueing delay of each job: ")
+    for i in range(total_job_type):
+        print("job type ",i+1," average total queue delay = ",job_queue_delay[i]/job_freq[i],"total delay = ",job_total_delay[i]/job_freq[i])
+    print("\nAverage queue length of each station")
+    for i in range(len(q_len)):
+        print("station no ",i+1," average number in queue = ",q_len[i]/30.0)
+    print("\nAverage total job in whole system = ",total_done_job/30.0)
+
+    print("\nAverage queue delay at stations: ")
+    for i in range(len(total_q_delay_at_station)):
+        print("station no ",i+1," average queue delay = ",total_q_delay_at_station[i]/30.0)
+    mx = -10**10
+    mx_index = -1
+    for i in range(len(total_q_delay_at_station)):
+        if mx < total_q_delay_at_station[i]:
+            mx = total_q_delay_at_station[i]
+            mx_index = i
+
+    print("\nDecision Choice = ")
+    print("As the average queue delay is greatest in station ",mx_index+1)
+    print("So, new machine should be set at station ",mx_index+1)
+    print("This choice is made on the basis of 'Limiting Theory' which reveals the bottle-neck criteria") 
 if __name__ == "__main__":
     main()
