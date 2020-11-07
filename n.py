@@ -38,6 +38,10 @@ class Event:
                 next_job = Job(type,rout[type-1],service_time_set[type-1],next_arrival_time)
                 event = Event(next_job,ARRIVAL)
                 shop.schedule_event(next_arrival_time,event)
+                shop.area_shop+=(shop.total_customer)*(shop.clock-shop.time_last_cust_chng)
+                shop.time_last_cust_chng = shop.clock
+                shop.total_customer+=1
+
             #next complete the current arrival tasks
             self.job.current_rout_index+=1 #go to next station
             station_index = self.job.rout[self.job.current_rout_index]-1 #for zero indexing
@@ -63,6 +67,10 @@ class Event:
                 shop.total_done_jobs+=1
                 self.job.job_total_delay+=(shop.clock-self.job.appeared_at)
                 shop.done_job_set.append(self.job)
+
+                shop.area_shop+=(shop.total_customer)*(shop.clock-shop.time_last_cust_chng)
+                shop.time_last_cust_chng = shop.clock
+                shop.total_customer-=1
             else:
                 #pass
                 shop.schedule_event(shop.clock,Event(self.job,ARRIVAL))
@@ -124,6 +132,9 @@ class Shop():
             self.station_set.append(Station(i))
         self.done_job_set = []
         self.total_sim_time = 0
+        self.area_shop = 0
+        self.total_customer = 0
+        self.time_last_cust_chng = 0
     def print_station_set(self):
         for i in range(self.total_station):
             print("station no ",i+1)
@@ -190,10 +201,10 @@ class Shop():
     def get_station_average_q_delay(self):
         queue_delay = []
         for i in self.station_set:
-            queue_delay.append(i.total_queue_delay)
+            queue_delay.append(i.total_queue_delay/i.served)
         return queue_delay
 def main():
-    data = return_row("input.txt")
+    data = return_row("input1.txt")
     total_station = int(data[0][0])
     number_of_machine_set = []
     for i in data[1]:
@@ -245,7 +256,7 @@ def main():
         job_freq.append(0)
         job_total_delay.append(0.0)
     total_done_job = 0
-    
+    total_cust_in_system = 0
     for _ in range(30):
         shop = Shop(total_station,number_of_machine_set,job_inter_arrival_time)
         shop.run(8)
@@ -258,13 +269,17 @@ def main():
         q_len = np.add(q_len,shop.get_station_average_q_len())
         total_done_job+=shop.total_done_jobs
         total_q_delay_at_station = np.add(total_q_delay_at_station,shop.get_station_average_q_delay())
+        
+        total_cust_in_system+=(shop.area_shop/8.0)
     print("Queueing delay of each job: ")
     for i in range(total_job_type):
         print("job type ",i+1," average total queue delay = ",job_queue_delay[i]/job_freq[i],"total delay = ",job_total_delay[i]/job_freq[i])
     print("\nAverage queue length of each station")
     for i in range(len(q_len)):
         print("station no ",i+1," average number in queue = ",q_len[i]/30.0)
-    print("\nAverage total job in whole system = ",total_done_job/30.0)
+    
+    print("\nAverage job in whole system at a moment = ",total_cust_in_system/30.0)
+    print("\nAverage total done job of system per day = ",total_done_job/30.0)
 
     print("\nAverage queue delay at stations: ")
     for i in range(len(total_q_delay_at_station)):
