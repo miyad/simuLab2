@@ -1,0 +1,27 @@
+Queueing delay of each job: 
+job type 1 average total queue delay = 1.5520791499279254 total delay = 3.073660924251855
+job type 2 average total queue delay = 0.9071979020242228 total delay = 2.739023694602071
+job type 3 average total queue delay = 1.694680657517769 total delay = 4.322745863157821
+
+Average queue length of each station
+station no 1 average number in queue = 2.117868788740744
+station no 2 average number in queue = 2.2185029521597337
+station no 3 average number in queue = 0.09343328200429106
+station no 4 average number in queue = 3.013900823366778
+station no 5 average number in queue = 0.5016991955033622
+
+Average job in whole system at a moment = 9.710969932615644
+
+Average total done job of system per day = 15.8
+
+Average queue delay at stations: 
+station no 1 average queue delay = 0.19074616012577222
+station no 2 average queue delay = 0.5194317423972108
+station no 3 average queue delay = 0.019092454184222563
+station no 4 average queue delay = 0.33931880649587387
+station no 5 average queue delay = 0.20464552857930843
+
+Decision Choice = 
+As the average queue delay is greatest in station 2
+So, new machine should be set at station 2
+This choice is made on the basis of 'Limiting Theory' which reveals the bottle-neck criteria

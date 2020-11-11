@@ -44,6 +44,8 @@ class Customer:
 class HotFood:
     def __init__(self,s,ST):#number of server
         #ST is a tuple having (a,b) of service time dist U(a,b)
+        self.max_q_len = 0
+        self.max_delay = 0.0 #infinity for finding max
         self.ST = (ST[0]/s,ST[1]/s)
         self.queue = []
         self.total_queue_delay = 0
@@ -57,6 +59,8 @@ class HotFood:
 class Sandwitch:
     def __init__(self,s,ST): #number of server
         #ST is a tuple (a,b) of U(a,b)
+        self.max_q_len = 0
+        self.max_delay = 0.0
         self.ST = (ST[0]/s,ST[1]/s)
         self.queue = []
         self.total_queue_delay = 0
@@ -69,6 +73,8 @@ class Sandwitch:
         return current_time + np.random.uniform(self.ST[0],self.ST[1],1)[0]
 class Cashier:
     def __init__(self,s):#numebr of server,queue and service time tuple 
+        self.max_delay = 0
+        self.max_q_len = 0
         self.queue = []
         for i in range(s):
             self.queue.append([])
@@ -100,6 +106,7 @@ class Event:
                 cafe.total_group += 1 #id increment to new group
                 next_arrival = cafe.clock + np.random.exponential(cafe.inter_arrival_time,1)[0]
                 grp = generate_job_group()
+                cafe.max_cust = max(cafe.max_cust,cafe.total_cust())
                 cafe.area_shop += cafe.total_cust()*(cafe.clock-cafe.time_last_customer_change)
                 cafe.time_last_customer_change = cafe.clock
                 for i in range(grp):
@@ -116,6 +123,7 @@ class Event:
                         #print("dif = ",cafe.clock-cafe.hot_food.last_event_time, "len = ",len(cafe.hot_food.queue))
                     cafe.hot_food.queue.append((cafe.clock,self.customer))
                     cafe.hot_food.last_event_time = cafe.clock
+                    cafe.hot_food.max_q_len = max(cafe.hot_food.max_q_len,len(cafe.hot_food.queue))
                 
                 else:
                     next_depart = cafe.clock + np.random.uniform(cafe.hot_food.ST[0],cafe.hot_food.ST[1],1)[0]
@@ -128,6 +136,7 @@ class Event:
                         cafe.sandwitch.area_qt += len(cafe.sandwitch.queue)*(cafe.clock-cafe.sandwitch.last_event_time)
                     cafe.sandwitch.queue.append((cafe.clock,self.customer))
                     cafe.sandwitch.last_event_time = cafe.clock
+                    cafe.sandwitch.max_q_len = max(cafe.sandwitch.max_q_len,len(cafe.sandwitch.queue))
                 else:
                     next_depart = cafe.clock + np.random.uniform(cafe.sandwitch.ST[0],cafe.sandwitch.ST[1],1)[0]
                     cafe.schedule_event(next_depart,Event(self.customer,DEPART))
@@ -159,7 +168,8 @@ class Event:
                     elif self.customer.type == 2:
                         ac_time += np.random.uniform(5.0,15.0,1)[0]
                     cafe.schedule_event(cafe.clock+ac_time,Event(self.customer, DEPART))
-
+                for i in range(cafe.cashier.k):
+                    cafe.cashier.max_q_len = max(cafe.cashier.max_q_len,len(cafe.cashier.queue[i]))
         elif self.event_type == DEPART:
             
             if self.customer.station_index == 1:
@@ -171,8 +181,9 @@ class Event:
                     t,c = cafe.hot_food.queue.pop(0)
                     cafe.hot_food.area_qt += q_len*(cafe.clock-cafe.hot_food.last_event_time)
                     cafe.hot_food.total_queue_delay += (cafe.clock-t)
+                    cafe.hot_food.max_delay = max(cafe.hot_food.max_delay,cafe.clock-t)
                     #print(cafe.clock-t," len = ",q_len," age  = ",cafe.clock-c.appeared_at)
-                    self.customer.total_queue_delay += (cafe.clock-t)
+                    c.total_queue_delay += (cafe.clock-t)
                     
                     cafe.schedule_event(cafe.hot_food.next_depart(cafe.clock),Event(c,DEPART))
                     cafe.hot_food.last_event_time = cafe.clock
@@ -188,7 +199,8 @@ class Event:
                     t, c = cafe.sandwitch.queue.pop(0)
                     cafe.sandwitch.area_qt += q_len*(cafe.clock-cafe.sandwitch.last_event_time)
                     cafe.sandwitch.total_queue_delay += (cafe.clock-t)
-                    self.customer.total_queue_delay += (cafe.clock-t)
+                    c.total_queue_delay += (cafe.clock-t)
+                    cafe.sandwitch.max_delay = max(cafe.sandwitch.max_delay,cafe.clock-t)
                     cafe.schedule_event(cafe.sandwitch.next_depart(cafe.clock),Event(c,DEPART))
                     cafe.sandwitch.last_event_time = cafe.clock
                 else:
@@ -217,20 +229,23 @@ class Event:
                     cafe.cashier.area_qt += q_len*(cafe.clock-cafe.cashier.last_event_time)
                     cafe.cashier.last_event_time = cafe.clock
                     cafe.cashier.total_queue_delay += (cafe.clock-t)
-                    self.customer.total_queue_delay += (cafe.clock-t)
+                    c.total_queue_delay += (cafe.clock-t)
+                    cafe.cashier.max_delay = max(cafe.cashier.max_delay,cafe.clock-t)
 
                     ac_time = np.random.uniform(5.0,10.0,1)[0]#ac time for drinks
                     if self.customer.type == 1:
                         ac_time += np.random.uniform(20.0,40.0,1)[0]
                     elif self.customer.type == 2:
                         ac_time += np.random.uniform(5.0,15.0,1)[0]
-                    cafe.schedule_event(cafe.clock+ac_time,Event(self.customer, DEPART))
+                    cafe.schedule_event(cafe.clock+ac_time,Event(c, DEPART))
                     
                 else:
+                    pass
                     if len(busy_cahier_set) > 0:
                         cafe.cashier.is_cashier_busy[busy_cahier_set[index]] = False
                     else:
-                        cafe.cashier.is_cashier_busy[0] = False
+                        #cafe.cashier.is_cashier_busy[0] = False
+                        pass
                 self.customer.customer_total_delay = cafe.clock-self.customer.appeared_at
                
                 cafe.served_customer_set.append(self.customer)
@@ -254,6 +269,7 @@ class Cafeteria:
         #this track and prevents excessive arrival 
         self.total_group = 0
         self.served_customer_set = []
+        self.max_cust = 0
         pass
     def schedule_event(self,time,event):
         heapq.heappush(self.eventq,(time,event))
@@ -293,25 +309,28 @@ class Cafeteria:
             #print("time = ",time)
             event.process(self)
         pass
-def main():
+def main(scenario,f):
     data = return_row("input2.txt")
-    cafe = Cafeteria(int(data[0][0]),int(data[0][1]),int(data[0][2]),30)
+    cafe = Cafeteria(int(data[scenario][0]),int(data[scenario][1]),int(data[scenario][2]),30)
     cafe.run(5400)
-    print(cafe.total_group)
-    print(cafe.inter_arrival_time)
-    print("___________Average Delay in Queue____")
-    print("Hot Food: ",cafe.hot_food.total_queue_delay/cafe.hot_food.served)
-    print("Sandwitch: ",cafe.sandwitch.total_queue_delay/cafe.sandwitch.served)
- 
-    print("Cashier: ",cafe.cashier.total_queue_delay/cafe.cashier.served)
+    f.write("\n\nNumber of servers in Hot food, Sandwitch, cashier are: "+str(int(data[scenario][0]))+","+str(int(data[scenario][1]))+","+str(int(data[scenario][2]))+"\n")
+    #print("Number of servers in Hot food, Sandwitch, cashier are: ",int(data[scenario][0]),int(data[scenario][1]),int(data[scenario][2]))
+    f.write("___________Average and Maximum Delay in Queue____\n")
+    #print("___________Average and Maximum Delay in Queue____")
+    f.write("Hot Food: avg = "+str(cafe.hot_food.total_queue_delay/cafe.hot_food.served)+" Maximum = "+str(cafe.hot_food.max_delay)+"\n")
+    #print("Hot Food: avg = ",cafe.hot_food.total_queue_delay/cafe.hot_food.served," Maximum = ",cafe.hot_food.max_delay)
+    f.write("Sandwitch: avg = "+str(cafe.sandwitch.total_queue_delay/cafe.sandwitch.served)+ " Maximum = "+str(cafe.sandwitch.max_delay)+"\n")
+    #print("Sandwitch: avg = ",cafe.sandwitch.total_queue_delay/cafe.sandwitch.served, " Maximum = ",cafe.sandwitch.max_delay)
+    f.write("Cashier: avg = "+str(cafe.cashier.total_queue_delay/cafe.cashier.served)+ " Maximum = "+str(cafe.cashier.max_delay)+"\n")
+    #print("Cashier: avg = ",cafe.cashier.total_queue_delay/cafe.cashier.served, " Maximum = ",cafe.cashier.max_delay)
    
     
-    print("___________Average Queue length___________")
-    print("Hot food: ",cafe.hot_food.area_qt/cafe.total_sim_time)
-    print("Sandwitch: ",cafe.sandwitch.area_qt/cafe.total_sim_time)
-    print("Cashier: ",cafe.cashier.area_qt/(2*cafe.total_sim_time))
+    f.write("___________Average and Maximum Queue length___________\n")
+    f.write("Hot food: avg = "+str(cafe.hot_food.area_qt/cafe.total_sim_time)+" Maximum = "+str(cafe.hot_food.max_q_len)+"\n")
+    f.write("Sandwitch: avg = "+str(cafe.sandwitch.area_qt/cafe.total_sim_time)+ " Maximum = "+str(cafe.sandwitch.max_q_len)+"\n")
+    f.write("Cashier: avg = "+str(cafe.cashier.area_qt/(cafe.total_sim_time))+ " Maximum = "+str(cafe.cashier.max_q_len)+"\n")
     
-    print("_______Avg Customer Delay in Queue_________")
+    f.write("_______Avg Customer Delay in Queue_________\n")
     delay1 = []
     delay2 = []
     delay3 = []
@@ -326,12 +345,19 @@ def main():
         if(i.type==3):
             delay3.append(i.total_queue_delay)
             weighted_delay += 0.05*i.customer_total_delay
-    print("Customer type 1:",np.mean(delay1))
-    print("Customer type 2: ",np.mean(delay2))
-    print("Customer type 3: ",np.mean(delay3))
-    print("\nCustomer average weighted delay = ",weighted_delay/cafe.cashier.served)
+    f.write("Customer type 1: avg: "+str(np.mean(delay1))+" Maximum = "+str(np.max(delay1))+"\n")
+    f.write("Customer type 2: avg: "+str(np.mean(delay2))+" Maximum = "+str(np.max(delay2))+"\n")
+    f.write("Customer type 3: avg: "+str(np.mean(delay3))+" Maximum = "+str(np.max(delay3))+"\n")
+    f.write("\nCustomer average weighted delay = "+str(weighted_delay/cafe.cashier.served)+"\n")
     
-    print("Avg Customer in system = ",cafe.area_shop/cafe.total_sim_time)
+    f.write("Avg Customer in system = "+str(cafe.area_shop/cafe.total_sim_time)+"\n")
+    f.write("Max customer in system = "+str(cafe.max_cust)+"\n")
     #print(cafe.disc_group)
 if __name__ == "__main__":
-    main()
+    f = open("output2.txt",'w')
+    for i in range(7):
+        main(i,f)
+    f.write("Recommendation: As total delay in hot food and sandwitch are more than the cashier\n")
+    f.write("Increasing the server at Hot food and sandwitch improves performance of service\n")
+    f.write(" So, 2 2 2 case are the most efficent case\n")
+    f.close()

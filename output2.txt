@@ -1,0 +1,136 @@
+
+
+Number of servers in Hot food, Sandwitch, cashier are: 1,1,2
+___________Average and Maximum Delay in Queue____
+Hot Food: avg = 2139.0389208668325 Maximum = 4079.609807037352
+Sandwitch: avg = 152.15984073643682 Maximum = 565.207235488771
+Cashier: avg = 1.102581514994449 Maximum = 34.141019210427885
+___________Average and Maximum Queue length___________
+Hot food: avg = 83.6851068939078 Maximum = 166
+Sandwitch: avg = 1.1828286855470738 Maximum = 6
+Cashier: avg = 0.9849490158606651 Maximum = 1
+_______Avg Customer Delay in Queue_________
+Customer type 1: avg: 2076.5101026154857 Maximum = 4010.709446784449
+Customer type 2: avg: 150.1219469532555 Maximum = 565.207235488771
+Customer type 3: avg: 0.0 Maximum = 0
+
+Customer average weighted delay = 1020.621756197036
+Avg Customer in system = 88.52243347399975
+Max customer in system = 169
+
+
+Number of servers in Hot food, Sandwitch, cashier are: 1,1,3
+___________Average and Maximum Delay in Queue____
+Hot Food: avg = 2078.711275483734 Maximum = 4105.520551072335
+Sandwitch: avg = 517.9357346981045 Maximum = 1122.543270505069
+Cashier: avg = 0.0 Maximum = 0
+___________Average and Maximum Queue length___________
+Hot food: avg = 106.67297455898631 Maximum = 210
+Sandwitch: avg = 4.161651637680218 Maximum = 9
+Cashier: avg = 0.0 Maximum = 0
+_______Avg Customer Delay in Queue_________
+Customer type 1: avg: 2010.2859329658613 Maximum = 4008.3148990424497
+Customer type 2: avg: 499.69507113845776 Maximum = 1122.543270505069
+Customer type 3: avg: 0.0 Maximum = 0
+
+Customer average weighted delay = 960.6543330077141
+Avg Customer in system = 115.41840751575701
+Max customer in system = 217
+
+
+Number of servers in Hot food, Sandwitch, cashier are: 2,1,2
+___________Average and Maximum Delay in Queue____
+Hot Food: avg = 1449.3574543478142 Maximum = 2850.699878203107
+Sandwitch: avg = 179.9979300025385 Maximum = 575.8560196146968
+Cashier: avg = 0.8633244200296712 Maximum = 33.658591928590795
+___________Average and Maximum Queue length___________
+Hot food: avg = 62.27051411013367 Maximum = 121
+Sandwitch: avg = 1.3699003526249312 Maximum = 6
+Cashier: avg = 0.9360419542098698 Maximum = 1
+_______Avg Customer Delay in Queue_________
+Customer type 1: avg: 1420.462793955926 Maximum = 2848.8076683774843
+Customer type 2: avg: 180.8606716790795 Maximum = 575.8560196146968
+Customer type 3: avg: 0.6476625495660561 Maximum = 9.067275693924785
+
+Customer average weighted delay = 879.8777002741261
+Avg Customer in system = 66.44208007735271
+Max customer in system = 129
+
+
+Number of servers in Hot food, Sandwitch, cashier are: 1,2,2
+___________Average and Maximum Delay in Queue____
+Hot Food: avg = 2096.7584089872153 Maximum = 4136.442367081387
+Sandwitch: avg = 30.085422662511153 Maximum = 204.1943175807071
+Cashier: avg = 1.0217805705616196 Maximum = 29.063244897848108
+___________Average and Maximum Queue length___________
+Hot food: avg = 103.11102902398594 Maximum = 211
+Sandwitch: avg = 0.2284263572523995 Maximum = 3
+Cashier: avg = 0.9900019929546796 Maximum = 1
+_______Avg Customer Delay in Queue_________
+Customer type 1: avg: 2029.6066489226491 Maximum = 4114.08467199609
+Customer type 2: avg: 37.42907406311503 Maximum = 233.2575624785552
+Customer type 3: avg: 0.0 Maximum = 0
+
+Customer average weighted delay = 951.9351967889563
+Avg Customer in system = 105.55717523168109
+Max customer in system = 213
+
+
+Number of servers in Hot food, Sandwitch, cashier are: 2,2,2
+___________Average and Maximum Delay in Queue____
+Hot Food: avg = 1343.654650253372 Maximum = 2602.0016992133014
+Sandwitch: avg = 44.22585904723658 Maximum = 166.32683973247185
+Cashier: avg = 0.9894850539026103 Maximum = 27.588809364157896
+___________Average and Maximum Queue length___________
+Hot food: avg = 66.19390356319667 Maximum = 138
+Sandwitch: avg = 0.36854882539363815 Maximum = 3
+Cashier: avg = 0.9673614083354668 Maximum = 1
+_______Avg Customer Delay in Queue_________
+Customer type 1: avg: 1319.3123941865954 Maximum = 2602.0016992133014
+Customer type 2: avg: 50.06234617666885 Maximum = 174.9095756277402
+Customer type 3: avg: 0.033472036394376424 Maximum = 0.40166443673251706
+
+Customer average weighted delay = 799.6273425852215
+Avg Customer in system = 69.2175217399681
+Max customer in system = 138
+
+
+Number of servers in Hot food, Sandwitch, cashier are: 2,1,3
+___________Average and Maximum Delay in Queue____
+Hot Food: avg = 1641.7606010496324 Maximum = 3138.734627214274
+Sandwitch: avg = 875.4705808374581 Maximum = 1705.5838353545478
+Cashier: avg = 0.033933795948910855 Maximum = 9.761785113740189
+___________Average and Maximum Queue length___________
+Hot food: avg = 81.10921010661816 Maximum = 154
+Sandwitch: avg = 9.495650960880464 Maximum = 20
+Cashier: avg = 0.554820374754267 Maximum = 1
+_______Avg Customer Delay in Queue_________
+Customer type 1: avg: 1609.1869986095303 Maximum = 3084.727790216475
+Customer type 2: avg: 837.5687178295791 Maximum = 1667.2939967622087
+Customer type 3: avg: 0.0 Maximum = 0
+
+Customer average weighted delay = 988.2382836990598
+Avg Customer in system = 93.76545283553156
+Max customer in system = 176
+
+
+Number of servers in Hot food, Sandwitch, cashier are: 1,2,3
+___________Average and Maximum Delay in Queue____
+Hot Food: avg = 2127.3853637632596 Maximum = 4394.290103598987
+Sandwitch: avg = 39.74968972368079 Maximum = 195.8871198577649
+Cashier: avg = 0.0 Maximum = 0
+___________Average and Maximum Queue length___________
+Hot food: avg = 118.3757342202935 Maximum = 221
+Sandwitch: avg = 0.34596952166907347 Maximum = 4
+Cashier: avg = 0.0 Maximum = 0
+_______Avg Customer Delay in Queue_________
+Customer type 1: avg: 2042.79144008497 Maximum = 4340.6091624151095
+Customer type 2: avg: 39.74968972368078 Maximum = 195.8871198577649
+Customer type 3: avg: 0.0 Maximum = 0
+
+Customer average weighted delay = 873.2317574961418
+Avg Customer in system = 120.95516036653427
+Max customer in system = 223
+Recommendation: As total delay in hot food and sandwitch are more than the cashier
+Increasing the server at Hot food and sandwitch improves performance of service
+ So, 2 2 2 case are the most efficent case

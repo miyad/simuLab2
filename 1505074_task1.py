@@ -204,6 +204,7 @@ class Shop():
             queue_delay.append(i.total_queue_delay/i.served)
         return queue_delay
 def main():
+    f = open("output1.txt",'w')
     data = return_row("input1.txt")
     total_station = int(data[0][0])
     number_of_machine_set = []
@@ -271,19 +272,19 @@ def main():
         total_q_delay_at_station = np.add(total_q_delay_at_station,shop.get_station_average_q_delay())
         
         total_cust_in_system+=(shop.area_shop/8.0)
-    print("Queueing delay of each job: ")
+    f.write("Queueing delay of each job: ")
     for i in range(total_job_type):
-        print("job type ",i+1," average total queue delay = ",job_queue_delay[i]/job_freq[i],"total delay = ",job_total_delay[i]/job_freq[i])
-    print("\nAverage queue length of each station")
+        f.write("\njob type "+str(i+1)+" average total queue delay = "+str(job_queue_delay[i]/job_freq[i])+" total delay = "+str(job_total_delay[i]/job_freq[i]))
+    f.write("\n\nAverage queue length of each station")
     for i in range(len(q_len)):
-        print("station no ",i+1," average number in queue = ",q_len[i]/30.0)
+        f.write("\nstation no "+str(i+1)+" average number in queue = "+str(q_len[i]/30.0))
     
-    print("\nAverage job in whole system at a moment = ",total_cust_in_system/30.0)
-    print("\nAverage total done job of system per day = ",total_done_job/30.0)
+    f.write("\n\nAverage job in whole system at a moment = "+str(total_cust_in_system/30.0))
+    f.write("\n\nAverage total done job of system per day = "+str(total_done_job/30.0))
 
-    print("\nAverage queue delay at stations: ")
+    f.write("\n\nAverage queue delay at stations: ")
     for i in range(len(total_q_delay_at_station)):
-        print("station no ",i+1," average queue delay = ",total_q_delay_at_station[i]/30.0)
+        f.write("\nstation no "+str(i+1)+" average queue delay = "+str(total_q_delay_at_station[i]/30.0))
     mx = -10**10
     mx_index = -1
     for i in range(len(total_q_delay_at_station)):
@@ -291,9 +292,10 @@ def main():
             mx = total_q_delay_at_station[i]
             mx_index = i
 
-    print("\nDecision Choice = ")
-    print("As the average queue delay is greatest in station ",mx_index+1)
-    print("So, new machine should be set at station ",mx_index+1)
-    print("This choice is made on the basis of 'Limiting Theory' which reveals the bottle-neck criteria") 
+    f.write("\n\nDecision Choice = ")
+    f.write("\nAs the average queue delay is greatest in station "+str(mx_index+1))
+    f.write("\nSo, new machine should be set at station "+str(mx_index+1))
+    f.write("\nThis choice is made on the basis of 'Limiting Theory' which reveals the bottle-neck criteria") 
+    f.close()
 if __name__ == "__main__":
     main()
