@@ -100,7 +100,7 @@ class Event:
                 cafe.total_group += 1 #id increment to new group
                 next_arrival = cafe.clock + np.random.exponential(cafe.inter_arrival_time,1)[0]
                 grp = generate_job_group()
-                cafe.area_shop += cafe.total_customer*(cafe.clock-cafe.time_last_customer_change)
+                cafe.area_shop += cafe.total_cust()*(cafe.clock-cafe.time_last_customer_change)
                 cafe.time_last_customer_change = cafe.clock
                 for i in range(grp):
                     type = generate_job_type()
@@ -143,14 +143,16 @@ class Event:
                         if mn > len(cafe.cashier.queue[i]):
                             mn = len(cafe.cashier.queue[i])
                             index = i
-                    cafe.cashier.queue[index].append((cafe.clock,self.customer))
+                    
                     if len(cafe.cashier.queue[index]) > 0:
                         cafe.cashier.area_qt += len(cafe.cashier.queue[index])*(cafe.clock-cafe.cashier.last_event_time)
                         cafe.cashier.last_event_time = cafe.clock
+                    cafe.cashier.queue[index].append((cafe.clock,self.customer))
                 else:
                     for i in range(cafe.cashier.k):
                         if not cafe.cashier.is_cashier_busy[i]:
                             cafe.cashier.is_cashier_busy[i]  = True
+                            break
                     ac_time = np.random.uniform(5.0,10.0,1)[0]#ac time for drinks
                     if self.customer.type == 1:
                         ac_time += np.random.uniform(20.0,40.0,1)[0]
@@ -169,7 +171,7 @@ class Event:
                     t,c = cafe.hot_food.queue.pop(0)
                     cafe.hot_food.area_qt += q_len*(cafe.clock-cafe.hot_food.last_event_time)
                     cafe.hot_food.total_queue_delay += (cafe.clock-t)
-                    print(cafe.clock-t," len = ",q_len," age  = ",cafe.clock-c.appeared_at)
+                    #print(cafe.clock-t," len = ",q_len," age  = ",cafe.clock-c.appeared_at)
                     self.customer.total_queue_delay += (cafe.clock-t)
                     
                     cafe.schedule_event(cafe.hot_food.next_depart(cafe.clock),Event(c,DEPART))
@@ -195,21 +197,20 @@ class Event:
                 self.customer.station_index = 4 #go to cahier after drinks
                 cafe.schedule_event(cafe.clock,Event(self.customer,ARRIVAL))
             if self.customer.station_index == 4:
-                cafe.area_shop += cafe.total_customer*(cafe.clock-cafe.time_last_customer_change)
+                cafe.area_shop += cafe.total_cust()*(cafe.clock-cafe.time_last_customer_change)
                 cafe.time_last_customer_change = cafe.clock
                 cafe.cashier.served += 1
                 cafe.total_customer -= 1
-                print("#######################customer = ",cafe.total_customer)
                 index = -1
                 busy_cahier_set = []
                 for i in range(cafe.cashier.k):
                     if cafe.cashier.is_cashier_busy[i]:
                         busy_cahier_set.append(i)
-                t = np.random.uniform(0,len(busy_cahier_set)-0.1,1)[0]
+                t = np.random.uniform(0,len(busy_cahier_set),1)[0]
                 index = int(t)
                 if(index >= len(busy_cahier_set)):
                     index-=1
-                print("index = ",index," set len = ",len(busy_cahier_set))
+                #print("index = ",index," set len = ",len(busy_cahier_set))
                 if len(busy_cahier_set) > 0 and len(cafe.cashier.queue[busy_cahier_set[index]]) > 0:
                     q_len = len(cafe.cashier.queue[busy_cahier_set[index]])
                     t, c = cafe.cashier.queue[busy_cahier_set[index]].pop(0)
@@ -217,6 +218,13 @@ class Event:
                     cafe.cashier.last_event_time = cafe.clock
                     cafe.cashier.total_queue_delay += (cafe.clock-t)
                     self.customer.total_queue_delay += (cafe.clock-t)
+
+                    ac_time = np.random.uniform(5.0,10.0,1)[0]#ac time for drinks
+                    if self.customer.type == 1:
+                        ac_time += np.random.uniform(20.0,40.0,1)[0]
+                    elif self.customer.type == 2:
+                        ac_time += np.random.uniform(5.0,15.0,1)[0]
+                    cafe.schedule_event(cafe.clock+ac_time,Event(self.customer, DEPART))
                     
                 else:
                     if len(busy_cahier_set) > 0:
@@ -224,8 +232,9 @@ class Event:
                     else:
                         cafe.cashier.is_cashier_busy[0] = False
                 self.customer.customer_total_delay = cafe.clock-self.customer.appeared_at
-                print("______________________  = ",cafe.clock,self.customer.appeared_at)
+               
                 cafe.served_customer_set.append(self.customer)
+                #cafe.total_customer-=1
                 
 class Cafeteria:
     def __init__(self,h,s,c,inter_arrival_time):#total number of server at hot food, sandwitch, cashier
@@ -248,6 +257,20 @@ class Cafeteria:
         pass
     def schedule_event(self,time,event):
         heapq.heappush(self.eventq,(time,event))
+    def total_cust(self):
+        total = len(self.hot_food.queue)
+        if self.hot_food.is_server_busy:
+            total+=1
+        total+=len(self.sandwitch.queue)
+        if self.sandwitch.is_server_busy:
+            total+=1
+        sm = 0
+        for i in range(self.cashier.k):
+            sm += len(self.cashier.queue[i])
+            if self.cashier.is_cashier_busy[i]:
+                total+=1
+        total+=sm
+        return total
     
     def run(self,total_sim_time):
         self.total_sim_time = total_sim_time
@@ -274,7 +297,6 @@ def main():
     data = return_row("input2.txt")
     cafe = Cafeteria(int(data[0][0]),int(data[0][1]),int(data[0][2]),30)
     cafe.run(5400)
-    print(cafe.total_customer)
     print(cafe.total_group)
     print(cafe.inter_arrival_time)
     print("___________Average Delay in Queue____")
@@ -310,5 +332,6 @@ def main():
     print("\nCustomer average weighted delay = ",weighted_delay/cafe.cashier.served)
     
     print("Avg Customer in system = ",cafe.area_shop/cafe.total_sim_time)
+    #print(cafe.disc_group)
 if __name__ == "__main__":
     main()
