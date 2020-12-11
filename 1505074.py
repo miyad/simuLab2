@@ -1,5 +1,16 @@
 from scipy import stats
 import numpy as np
+import csv
+import math
+def return_row(file):
+    f = open(file,'r')
+    usable = csv.reader(f)
+    arr = []
+    for j in usable:
+        for k in j:
+            a = list(map(float,k.split()))
+            arr.append(a)
+    return arr
 n = int(input("Enter how many numbers: "))
 z = 1505074
 mod = 2**31
@@ -85,7 +96,55 @@ def serial_test(k,d):
     chi_squared = chi_squared/(term)
     print(chi_squared)
     print(stats.chi2.ppf(q=1-0.5,df=k**d-1))
-serial_test(3,2)
+#serial_test(3,2)
+
+def run_test(alpha):
+    a = return_row('a.txt')
+    b = [1/6, 5/24, 11/120, 19/720, 29/5040, 1/840]
+    r = [0,0,0,0,0,0,0]
+    run_len = 0
+    i = 0
+    while i < n:
+        j = i
+        run_len = 1
+        if j+1 < n:
+            while rand_set[j]<=rand_set[j+1]:
+                run_len += 1
+                j = j + 1
+                if j+1 >=n:
+                    break
+        r[min(run_len,6)]+=1
+        i = j+1
+    
+    print(r)
+    print(b)
+    print(a)
+    R = 0
+    for i in range(1,7):
+        for j in range(1,7):
+            R = R + a[i-1][j-1]*(r[i]-n*b[i-1])*(r[j]-n*b[j-1])
+    R = R / n
+    if R > stats.chi2.ppf(q=1-alpha,df=6):
+        print("rejected")
+    else:
+        print("accepted")
+
+#run_test(0.1)
+def corelation_test(j,alpha):
+    h = int(-1+(n-1)/j)
+    roe_j = 0
+    for k in range(h+1):
+        roe_j = roe_j + rand_set[k*j]*rand_set[(k+1)*j]
+    roe_j = roe_j*12/(h+1)-3
+    var = (13*h+7)/((h+1)**2)
+    A_j = roe_j/math.sqrt(var)
+    z_alpha = stats.norm.ppf(q=1-alpha/2)
+    if abs(A_j)>z_alpha:
+        print("rejected")
+    else:
+        print("accepted")
+corelation_test(3,0.1)
+
 
 
 
