@@ -11,16 +11,19 @@ def return_row(file):
             a = list(map(float,k.split()))
             arr.append(a)
     return arr
-n = int(input("Enter how many numbers: "))
-z = 1505074
-mod = 2**31
-rand_set = []
-for i in range(n):
-    z = (65539*z) % mod
-    rand_set.append(z/mod)
+
+def generate_random(n):
+    z = 1505074
+    mod = 2**31
+    rand_set = []
+    for i in range(n):
+        z = (65539*z) % mod
+        rand_set.append(z/mod)
+    return rand_set
 #print(rand_set)
 
-def uniformity_test(k,alpha):
+def uniformity_test(k,alpha,rand_set):
+    n = len(rand_set)
     interval_frequency = []
     for i in range(k):
         interval_frequency.append(0)
@@ -41,6 +44,12 @@ def uniformity_test(k,alpha):
         print("rejected for alpha = ",alpha, " k = ",k)
     else:
         print("accepted for alpha = ",alpha, " k = ",k)
+print("____________Uniformity Test:________________")
+n = int(input("Enter how many numbers: "))
+rand_set = generate_random(n)
+k = int(input("Enter value of k: "))
+alpha = float(input("Enter value of alpha: "))
+uniformity_test(k,alpha,rand_set)
 
 
 q_list = [0.25,0.5,0.75,0.9,0.95,0.975,0.99]
@@ -48,10 +57,10 @@ k_list = [5, 10, 15, 20, 25, 30, 35]
 def call_unifromity():
     for q in q_list:
         for k in k_list:
-            uniformity_test(k,q)
+            uniformity_test(k,q,rand_set)
 #call_unifromity()
 
-def serial_test(k,d):
+def serial_test(k,d,alpha,rand_set):
     dictionary = {}
     index = []
     single_tuple = [0]*d
@@ -74,11 +83,11 @@ def serial_test(k,d):
             single_tuple[i] = 0
     for each_tuple in index:
         dictionary[each_tuple] = 0 #f val
-    print(index)
+    #print(index)
     for i in range(int(n/d)):
         cur_d = []
         for j in range(d):
-            print(rand_set[i*d+j],end=',')
+            #print(rand_set[i*d+j],end=',')
             cur_d.append(rand_set[i*d+j])
         
         tmp_index = [0]*d
@@ -87,18 +96,31 @@ def serial_test(k,d):
                 if cur_d[i] >=j*(1/k) and cur_d[i]<= (j+1)*(1/k):
                     tmp_index[i] = j
         dictionary[tuple(tmp_index)]+=1
-    print(dictionary)
+    #print(dictionary)
     chi_squared = 0
     term = n/(k**d)
     for i in dictionary:
-        print(dictionary[i])
-        chi_squared = chi_squared + (d*dictionary[i]-term)**2
+        #print(dictionary[i])
+        chi_squared = chi_squared + (dictionary[i]-term)**2
     chi_squared = chi_squared/(term)
     print(chi_squared)
-    print(stats.chi2.ppf(q=1-0.5,df=k**d-1))
+    chi_2 = stats.chi2.ppf(q=1-alpha,df=k**d-1)
+    print("chi2 = ",chi_2)
+    if chi_squared > chi_2:
+        print("rejected")
+    else:
+        print("accepted")
 #serial_test(3,2)
 
-def run_test(alpha):
+print("_________Serial Test______________")
+n = int(input("Enter How many numbers: "))
+k = int(input("enter value of k: "))
+d = int(input("enter value of d: "))
+alpha = float(input("Enter value of alpha : "))
+rand_set = generate_random(n)
+serial_test(k,d,alpha,rand_set)
+
+def run_test(alpha,rand_set):
     a = return_row('a.txt')
     b = [1/6, 5/24, 11/120, 19/720, 29/5040, 1/840]
     r = [0,0,0,0,0,0,0]
@@ -116,9 +138,9 @@ def run_test(alpha):
         r[min(run_len,6)]+=1
         i = j+1
     
-    print(r)
-    print(b)
-    print(a)
+    #print(r)
+    #print(b)
+    #print(a)
     R = 0
     for i in range(1,7):
         for j in range(1,7):
@@ -130,7 +152,14 @@ def run_test(alpha):
         print("accepted")
 
 #run_test(0.1)
-def corelation_test(j,alpha):
+
+print("_______________Run Test____________")
+n = int(input("Enter How many numbers: "))
+rand_set = generate_random(n)
+alpha = float(input("Enter value of alpha: "))
+run_test(alpha=alpha,rand_set=rand_set)
+
+def corelation_test(j,alpha,rand_set):
     h = int(-1+(n-1)/j)
     roe_j = 0
     for k in range(h+1):
@@ -143,7 +172,12 @@ def corelation_test(j,alpha):
         print("rejected")
     else:
         print("accepted")
-corelation_test(3,0.1)
+print("__________Co-Relation Test_____________")
+n = int(input("Enter How many numbers: "))
+j = int(input("Enter value of j: "))
+alpha = float(input("Enter value of alpha: "))
+rand_set = generate_random(n)
+corelation_test(j,alpha,rand_set)
 
 
 
