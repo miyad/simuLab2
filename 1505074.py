@@ -41,16 +41,24 @@ def uniformity_test(k,alpha,rand_set):
     chi2 = stats.chi2.ppf(q=1-alpha,df = k-1)
     print("chi2 = ",chi2)
     if chi_squared > chi2:
-        print("rejected for alpha = ",alpha, " k = ",k)
+        print("rejected for n = ",n, " k = ",k)
     else:
-        print("accepted for alpha = ",alpha, " k = ",k)
+        print("accepted for n = ",n, " k = ",k)
+
+n_set = [20,500,4000,10000]
 print("____________Uniformity Test:________________")
+for n in n_set:
+    rand_set = generate_random(n)
+    uniformity_test(10,0.1,rand_set=rand_set)
+    uniformity_test(20,0.1,rand_set)
+"""
 n = int(input("Enter how many numbers: "))
 rand_set = generate_random(n)
 k = int(input("Enter value of k: "))
 alpha = float(input("Enter value of alpha: "))
 uniformity_test(k,alpha,rand_set)
 
+"""
 
 q_list = [0.25,0.5,0.75,0.9,0.95,0.975,0.99]
 k_list = [5, 10, 15, 20, 25, 30, 35]
@@ -107,18 +115,31 @@ def serial_test(k,d,alpha,rand_set):
     chi_2 = stats.chi2.ppf(q=1-alpha,df=k**d-1)
     print("chi2 = ",chi_2)
     if chi_squared > chi_2:
-        print("rejected")
+        print("rejected for n = ",n," k = ",k, " d = ",d)
     else:
-        print("accepted")
+        print("accepted for n = ",n, " k = ",k, " d = ",d)
 #serial_test(3,2)
 
-print("_________Serial Test______________")
+
+print("___________________Serial Test______________________________")
+
+k_set = [4,8]
+d_set = [2,3]
+for n in n_set:
+    rand_set = generate_random(n)
+    for k in k_set:
+        for d in d_set:
+            serial_test(k,d,0.1,rand_set)
+
+"""
 n = int(input("Enter How many numbers: "))
 k = int(input("enter value of k: "))
 d = int(input("enter value of d: "))
 alpha = float(input("Enter value of alpha : "))
 rand_set = generate_random(n)
 serial_test(k,d,alpha,rand_set)
+"""
+
 
 def run_test(alpha,rand_set):
     a = return_row('a.txt')
@@ -147,19 +168,25 @@ def run_test(alpha,rand_set):
             R = R + a[i-1][j-1]*(r[i]-n*b[i-1])*(r[j]-n*b[j-1])
     R = R / n
     if R > stats.chi2.ppf(q=1-alpha,df=6):
-        print("rejected")
+        print("rejected for n = ",n)
     else:
-        print("accepted")
+        print("accepted for n = ", n)
 
 #run_test(0.1)
+print("__________________________Run Test__________________________")
+for n in n_set:
+    rand_set = generate_random(n)
+    run_test(0.1,rand_set)
 
-print("_______________Run Test____________")
+"""
 n = int(input("Enter How many numbers: "))
 rand_set = generate_random(n)
 alpha = float(input("Enter value of alpha: "))
 run_test(alpha=alpha,rand_set=rand_set)
 
+"""
 def corelation_test(j,alpha,rand_set):
+    n = len(rand_set)
     h = int(-1+(n-1)/j)
     roe_j = 0
     for k in range(h+1):
@@ -169,16 +196,22 @@ def corelation_test(j,alpha,rand_set):
     A_j = roe_j/math.sqrt(var)
     z_alpha = stats.norm.ppf(q=1-alpha/2)
     if abs(A_j)>z_alpha:
-        print("rejected")
+        print("rejected for n = ",n," j = ",j)
     else:
-        print("accepted")
-print("__________Co-Relation Test_____________")
+        print("accepted for n = ",n," j = ",j)
+print("_____________________Co-Relation Test_________________________")
+j_set = [1,3,5]
+for n in n_set:
+    rand_set = generate_random(n)
+    for j in j_set:
+        corelation_test(j,0.1,rand_set)
+"""
 n = int(input("Enter How many numbers: "))
 j = int(input("Enter value of j: "))
 alpha = float(input("Enter value of alpha: "))
 rand_set = generate_random(n)
 corelation_test(j,alpha,rand_set)
-
+"""
 
 
 
